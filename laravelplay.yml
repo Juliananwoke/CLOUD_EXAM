@@ -1,0 +1,39 @@
+- name: Run Laravel script
+  hosts: all
+  become: false
+
+  tasks:
+    - name: Transfer laravel script to remote server
+      copy:
+        src: laravellamp.sh
+        dest: /home/vagrant/laravellamp.sh
+        mode: 0755
+
+    - name: Execute setup script
+      shell: /home/vagrant/laravellamp.sh
+
+    - name: Checking for Laravel accessibility
+      uri:
+        url: http://192.168.74.130/
+        status_code: 200
+        timeout: 20
+      register: result
+    
+
+    - name: Display result
+      debug:
+        msg: "status: {{ result.status }}"
+
+
+- name: Cron Job For Checking Server Uptime
+  hosts: all
+
+  tasks:
+    - name: Create Cron Job to run every 00:00am
+      cron:
+        name: "show server uptime"
+        minute: '0'
+        hour: '0'
+        job: "/usr/bin/uptime >> /var/tmp/server_uptime.log"
+        state: present
+
